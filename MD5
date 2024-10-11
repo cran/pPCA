@@ -1,0 +1,11 @@
+223cdac62238ad7e8b18bc317418b486 *DESCRIPTION
+6566c27afb0990f2a12b558a2b12df17 *NAMESPACE
+70600bf78b71c5bee498bfed0a0f20cd *R/Afun.R
+1ff06af0a6aecdd56a0cd9f886a9bfc3 *R/Atrans.R
+6035faa9925ccd201d9e1df579c7bf09 *R/RcppExports.R
+755e5fd42268e419f8122024eac33c20 *R/pPCA.r
+d269aab0cd1226f35a048e895efdaac1 *R/pca_list.R
+97ce93ac61198f41b4d29ab3a481c729 *R/pca_matrix.R
+412a8c9e1f438b9ae3926b1e05b53029 *man/pPCA.Rd
+b020e8236eb8d2630e1019ac7475ac29 *src/RcppExports.cpp
+d6695e32ae4536ba4913943a2114b0a3 *src/matrix_manip.cpp
