@@ -28,7 +28,7 @@
 ##
 
 
-pca_list <- function(lm, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
+pca_list <- function(lm, rank, retX = TRUE, scale. = TRUE, normalize = FALSE, sd.tol = 1e-5){
 
   m_colnames <- lapply(lm,colnames)
   m_colnames <- if(any(sapply(m_colnames,is.null))) NULL else unlist(m_colnames)
@@ -53,30 +53,29 @@ pca_list <- function(lm, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
   if(rank > min(n,p)/4)
     warning("Too many principal components requested.")
 
+  sds = vector(mode = "list",length = length(lm))
+  for(ii in 1:length(lm)) {
+    m <- lm[[ii]]
+    if(class(m)[1] == "dgCMatrix") {
+      sds[[ii]] <- sqrt(colMSD_dgc(m,cm[[ii]]))
+    } else if(class(m)[1] == "matrix") {
+      sds[[ii]] <- apply(m,2,sd)
+    } else {
+      stop("Only base::matrix and Matrix::dgCMatrix matrices (or a list of these) are supported.")
+    }
+  }
+  sds <- unlist(sds)
+  if(any(sds == 0))
+    stop("cannot rescale a constant/zero column to unit variance")
+
+  if(any(sds < sd.tol))
+    warning("Columns with very low sd (< ",sd.tol,") encountered. They should be removed",immediate. = T)
 
   if(scale.) {
-    sds = vector(mode = "list",length = length(lm))
-    for(ii in 1:length(lm)) {
-      m <- lm[[ii]]
-      if(class(m)[1] == "dgCMatrix") {
-        sds[[ii]] <- sqrt(colMSD_dgc(m,cm[[ii]]))
-      } else if(class(m)[1] == "matrix") {
-        sds[[ii]] <- apply(m,2,sd)
-      } else {
-        stop("Only base::matrix and Matrix::dgCMatrix matrices (or a list of these) are supported.")
-      }
-    }
-    sds <- unlist(sds)
-    if(any(sds == 0))
-      stop("cannot rescale a constant/zero column to unit variance")
-
-    if(any(sds < sd.tol))
-      warning("Columns with very low sd (< ",sd.tol,") encountered. They should be removed",immediate. = T)
-
     sc = sqrt(n-1)*sds
 
   } else {
-    sc = FALSE
+    sc = rep(sqrt(n-1),p)
   }
 
   cm <- unlist(cm)
@@ -110,10 +109,18 @@ pca_list <- function(lm, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
   result <- list("sdev" = sv$d, "rotation" =sv$v,center = cm)
 
   result$scale <- if(!scale.) FALSE else sds;
+  result$sds <- sds;
 
-  if(retX)
-    result$x <- pcscores
+  if(retX){
+    if(normalize){
+      result$x <- sweep(pcscores, 2, sv$d ,FUN = "/")
+    }
+    else{
+      result$x <- pcscores
+    }
+  }
 
+  result$nsample <- n
   class(result) <- c("pPCA","prcomp")
   return (result)
 }

@@ -9,7 +9,9 @@ importFrom("Matrix","sparseMatrix","crossprod","colMeans")
 importClassesFrom("Matrix", "dgeMatrix", "dgCMatrix")
 importFrom("methods", "as","is")
 importFrom("RSpectra","svds");
+importFrom("utils", "head", "tail")
 
+S3method(print, pPCA)
 export(pPCA)
 
 

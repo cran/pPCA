@@ -25,7 +25,7 @@
 ## # print(result)
 ##
 
-pca_matrix <- function(m, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
+pca_matrix <- function(m, rank, retX = TRUE, scale. = TRUE, normalize = FALSE, sd.tol = 1e-5){
 
 
   m_colnames <- colnames(m)
@@ -43,25 +43,28 @@ pca_matrix <- function(m, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
   if(rank > min(n,p)/4)
     warning("Too many principal components requested.")
 
-  if(scale.) {
-    if(class(m)[1] == "dgCMatrix") {
-      sds <- sqrt(colMSD_dgc(m,cm))
-    } else if(class(m)[1] == "matrix") {
-      sds <- apply(m,2,sd)
-    } else {
-      stop("Only base::matrix and Matrix::dgCMatrix matrices (or a list of these) are supported.")
-    }
 
+  if(class(m)[1] == "dgCMatrix") {
+    sds <- sqrt(colMSD_dgc(m,cm))
+  } else if(class(m)[1] == "matrix") {
+    sds <- apply(m,2,sd)
+  } else {
+    stop("Only base::matrix and Matrix::dgCMatrix matrices (or a list of these) are supported.")
+  }
+
+
+
+
+
+
+  if(scale.) {
     if(any(sds == 0))
       stop("cannot rescale a constant/zero column to unit variance")
-
     if(any(sds < sd.tol))
       warning("Columns with very low sd (< ",sd.tol,") encountered. They should be removed",immediate. = T)
-
     sc = sqrt(n-1)*sds
-
   } else {
-    sc = FALSE
+    sc = rep(sqrt(n-1),p)
   }
 
 
@@ -87,9 +90,18 @@ pca_matrix <- function(m, rank, retX = TRUE, scale. = TRUE, sd.tol = 1e-5){
   result <- list("sdev" = sv$d, "rotation" =sv$v,center = cm)
 
   result$scale <- if(!scale.) FALSE else sds;
+  result$sds <- sds;
 
-  if(retX)
-    result$x <- pcscores
+  if(retX){
+    if(normalize){
+      result$x <- sweep(pcscores, 2, sv$d ,FUN = "/")
+    }
+    else{
+      result$x <- pcscores
+    }
+  }
+
+  result$nsample <- n
 
   class(result) <- c("pPCA","prcomp")
   return (result)
